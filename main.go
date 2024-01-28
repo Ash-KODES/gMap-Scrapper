@@ -22,7 +22,6 @@ import (
 	"github.com/playwright-community/playwright-go"
 
 	"github.com/gosom/google-maps-scraper/gmaps"
-	"github.com/gosom/google-maps-scraper/postgres"
 )
 
 func main() {
@@ -49,12 +48,7 @@ func main() {
 func run() error {
 	ctx := context.Background()
 	args := parseArgs()
-
-	if args.dsn == "" {
-		return runFromLocalFile(ctx, &args)
-	}
-
-	return runFromDatabase(ctx, &args)
+	return runFromLocalFile(ctx, &args)
 }
 
 func runFromLocalFile(ctx context.Context, args *arguments) error {
@@ -131,53 +125,6 @@ func runFromLocalFile(ctx context.Context, args *arguments) error {
 	}
 
 	return app.Start(ctx, seedJobs...)
-}
-
-func runFromDatabase(ctx context.Context, args *arguments) error {
-	db, err := openPsqlConn(args.dsn)
-	if err != nil {
-		return err
-	}
-
-	provider := postgres.NewProvider(db)
-
-	if args.produceOnly {
-		return produceSeedJobs(ctx, args, provider)
-	}
-
-	psqlWriter := postgres.NewResultWriter(db)
-
-	writers := []scrapemate.ResultWriter{
-		psqlWriter,
-	}
-
-	opts := []func(*scrapemateapp.Config) error{
-		// scrapemateapp.WithCache("leveldb", "cache"),
-		scrapemateapp.WithConcurrency(args.concurrency),
-		scrapemateapp.WithProvider(provider),
-		scrapemateapp.WithExitOnInactivity(args.exitOnInactivityDuration),
-	}
-
-	if args.debug {
-		opts = append(opts, scrapemateapp.WithJS(scrapemateapp.Headfull()))
-	} else {
-		opts = append(opts, scrapemateapp.WithJS())
-	}
-
-	cfg, err := scrapemateapp.NewConfig(
-		writers,
-		opts...,
-	)
-	if err != nil {
-		return err
-	}
-
-	app, err := scrapemateapp.NewScrapeMateApp(cfg)
-	if err != nil {
-		return err
-	}
-
-	return app.Start(ctx)
 }
 
 func produceSeedJobs(ctx context.Context, args *arguments, provider scrapemate.JobProvider) error {
