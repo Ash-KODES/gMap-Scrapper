@@ -45,7 +45,7 @@ emails
 cd google-maps-scraper
 go mod download
 go build
-./google-maps-scraper -input example-queries.txt -results restaurants-in-cyprus.csv -exit-on-inactivity 3m
+./google-maps-scraper -input example-queries.txt -results result.csv -exit-on-inactivity 3m -email
 ```
 
 Be a little bit patient. In the first run it downloads required libraries.

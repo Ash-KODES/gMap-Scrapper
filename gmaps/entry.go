@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"runtime/debug"
 	"strings"
+	"unicode"
 )
 
 type Image struct {
@@ -52,14 +53,20 @@ type Review struct {
 	When           string
 }
 
+type WorkingHours struct {
+	Day       string `json:"day" bson:"day"`
+	OpenHours string `json:"openhours" bson:"openhours"`
+	Open      bool   `json:"open" bson:"open"`
+}
+
 type Entry struct {
-	Link       string              `json:"link"`
-	Cid        string              `json:"cid"`
-	Title      string              `json:"title"`
-	Categories []string            `json:"categories"`
-	Category   string              `json:"category"`
-	Address    string              `json:"address"`
-	OpenHours  map[string][]string `json:"open_hours"`
+	Link         string         `json:"link"`
+	Cid          string         `json:"cid"`
+	Title        string         `json:"businessName"`
+	Categories   []string       `json:"categories"`
+	Category     string         `json:"category"`
+	Address      string         `json:"address"`
+	WorkingHours []WorkingHours `json:"WorkingHours"`
 	// PopularTImes is a map with keys the days of the week
 	// and value is a map with key the hour and value the traffic in that time
 	PopularTimes     map[string]map[int]int `json:"popular_times"`
@@ -81,7 +88,7 @@ type Entry struct {
 	Images           []Image                `json:"images"`
 	Reservations     []LinkSource           `json:"reservations"`
 	OrderOnline      []LinkSource           `json:"order_online"`
-	Menu             LinkSource             `json:"menu"`
+	Services         LinkSource             `json:"services"`
 	Owner            Owner                  `json:"owner"`
 	CompleteAddress  Address                `json:"complete_address"`
 	About            []About                `json:"about"`
@@ -124,10 +131,10 @@ func (e *Entry) Validate() error {
 func (e *Entry) CsvHeaders() []string {
 	return []string{
 		"link",
-		"title",
+		"businessName",
 		"category",
 		"address",
-		"open_hours",
+		"working_hours",
 		"popular_times",
 		"website",
 		"phone",
@@ -148,7 +155,7 @@ func (e *Entry) CsvHeaders() []string {
 		"images",
 		"reservations",
 		"order_online",
-		"menu",
+		"services",
 		"owner",
 		"complete_address",
 		"about",
@@ -163,7 +170,7 @@ func (e *Entry) CsvRow() []string {
 		e.Title,
 		e.Category,
 		e.Address,
-		stringify(e.OpenHours),
+		stringify(e.WorkingHours),
 		stringify(e.PopularTimes),
 		e.WebSite,
 		e.Phone,
@@ -184,7 +191,7 @@ func (e *Entry) CsvRow() []string {
 		stringify(e.Images),
 		stringify(e.Reservations),
 		stringify(e.OrderOnline),
-		stringify(e.Menu),
+		stringify(e.Services),
 		stringify(e.Owner),
 		stringify(e.CompleteAddress),
 		stringify(e.About),
@@ -234,7 +241,7 @@ func EntryFromJSON(raw []byte) (entry Entry, err error) {
 	entry.Address = strings.TrimSpace(
 		strings.TrimPrefix(getNthElementAndCast[string](darray, 18), entry.Title+","),
 	)
-	entry.OpenHours = getHours(darray)
+	entry.WorkingHours = getHours(darray)
 	entry.PopularTimes = getPopularTimes(darray)
 	entry.WebSite = getNthElementAndCast[string](darray, 7, 0)
 	entry.Phone = getNthElementAndCast[string](darray, 178, 0, 0)
@@ -285,7 +292,7 @@ func EntryFromJSON(raw []byte) (entry Entry, err error) {
 		source: []int{0, 0},
 	})
 
-	entry.Menu = LinkSource{
+	entry.Services = LinkSource{
 		Link:   getNthElementAndCast[string](darray, 38, 0),
 		Source: getNthElementAndCast[string](darray, 38, 1),
 	}
@@ -396,9 +403,9 @@ func getLinkSource(params getLinkSourceParams) []LinkSource {
 }
 
 //nolint:gomnd // it's ok, I need the indexes
-func getHours(darray []any) map[string][]string {
+func getHours(darray []any) []WorkingHours {
 	items := getNthElementAndCast[[]any](darray, 34, 1)
-	hours := make(map[string][]string, len(items))
+	var workingHours []WorkingHours
 
 	for _, item := range items {
 		day := getNthElementAndCast[string](item.([]any), 0)
@@ -408,11 +415,32 @@ func getHours(darray []any) map[string][]string {
 		for i := range timesI {
 			times[i], _ = timesI[i].(string)
 		}
+		timesInString := strings.Join(times, "") //""10 am–10 pm""
+		// Check if there are any time slots, and set the Open field accordingly
+		// startTime := ""
+		// endTime := ""
+		// Remove non-digit characters and split into start and end parts
+		cleanedTime := strings.ReplaceAll(timesInString, " ", "")
+		superCleanedTime := strings.ReplaceAll(cleanedTime, "\"", "")
+		// matches := regexp.MustCompile(`(\d{1,2}[APMapm]+)-(\d{1,2}[APMapm]+)`).FindStringSubmatch(superCleanedTime)
+		open := false
+		for _, char := range superCleanedTime {
+			if unicode.IsDigit(char) {
+				open = true
+			}
+		}
+		println(superCleanedTime)
+		// Create a WorkingHour instance and append it to the result slice
+		workingHour := WorkingHours{
+			Day:       day,
+			OpenHours: superCleanedTime,
+			Open:      open,
+		}
 
-		hours[day] = times
+		workingHours = append(workingHours, workingHour)
 	}
 
-	return hours
+	return workingHours
 }
 
 func getPopularTimes(darray []any) map[string]map[int]int {
