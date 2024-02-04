@@ -28,7 +28,7 @@ type Address struct {
 	Borough    string `json:"borough"`
 	Street     string `json:"street"`
 	City       string `json:"city"`
-	PostalCode string `json:"postal_code"`
+	PostalCode string `json:"postalCode"`
 	State      string `json:"state"`
 	Country    string `json:"country"`
 }
@@ -55,13 +55,13 @@ type Review struct {
 
 type WorkingHours struct {
 	Day       string `json:"day" bson:"day"`
-	OpenHours string `json:"openhours" bson:"openhours"`
+	OpenHours string `json:"openHours" bson:"openHours"`
 	Open      bool   `json:"open" bson:"open"`
 }
 
 type Entry struct {
 	Link         string         `json:"link"`
-	Cid          string         `json:"cid"`
+	Cid          string         `json:"cID"`
 	Title        string         `json:"businessName"`
 	Categories   []string       `json:"categories"`
 	Category     string         `json:"category"`
@@ -69,30 +69,30 @@ type Entry struct {
 	WorkingHours []WorkingHours `json:"WorkingHours"`
 	// PopularTImes is a map with keys the days of the week
 	// and value is a map with key the hour and value the traffic in that time
-	PopularTimes     map[string]map[int]int `json:"popular_times"`
-	WebSite          string                 `json:"web_site"`
+	PopularTimes     map[string]map[int]int `json:"popularTimes"`
+	WebSite          string                 `json:"webSite"`
 	Phone            string                 `json:"phone"`
-	PlusCode         string                 `json:"plus_code"`
-	ReviewCount      int                    `json:"review_count"`
-	ReviewRating     float64                `json:"review_rating"`
-	ReviewsPerRating map[int]int            `json:"reviews_per_rating"`
+	PlusCode         string                 `json:"plusCode"`
+	ReviewCount      int                    `json:"reviewCount"`
+	ReviewRating     float64                `json:"reviewRating"`
+	ReviewsPerRating map[int]int            `json:"reviewsPerRating"`
 	Latitude         float64                `json:"latitude"`
 	Longtitude       float64                `json:"longtitude"`
 	Status           string                 `json:"status"`
 	Description      string                 `json:"description"`
-	ReviewsLink      string                 `json:"reviews_link"`
+	ReviewsLink      string                 `json:"reviewsLink"`
 	Thumbnail        string                 `json:"thumbnail"`
-	Timezone         string                 `json:"timezone"`
-	PriceRange       string                 `json:"price_range"`
-	DataID           string                 `json:"data_id"`
+	Timezone         string                 `json:"timeZone"`
+	PriceRange       string                 `json:"priceRange"`
+	DataID           string                 `json:"dataID"`
 	Images           []Image                `json:"images"`
 	Reservations     []LinkSource           `json:"reservations"`
-	OrderOnline      []LinkSource           `json:"order_online"`
+	OrderOnline      []LinkSource           `json:"orderOnline"`
 	Services         LinkSource             `json:"services"`
 	Owner            Owner                  `json:"owner"`
-	CompleteAddress  Address                `json:"complete_address"`
+	CompleteAddress  Address                `json:"completeAddress"`
 	About            []About                `json:"about"`
-	UserReviews      []Review               `json:"user_reviews"`
+	UserReviews      []Review               `json:"userReviews"`
 	Emails           []string               `json:"emails"`
 }
 
@@ -134,32 +134,32 @@ func (e *Entry) CsvHeaders() []string {
 		"businessName",
 		"category",
 		"address",
-		"working_hours",
-		"popular_times",
-		"website",
+		"workingHours",
+		"popularTimes",
+		"webSite",
 		"phone",
-		"plus_code",
-		"review_count",
-		"review_rating",
-		"reviews_per_rating",
+		"plusCode",
+		"reviewCount",
+		"reviewRating",
+		"reviewsPerRating",
 		"latitude",
 		"longitude",
-		"cid",
+		"cID",
 		"status",
 		"descriptions",
-		"reviews_link",
+		"reviewsLink",
 		"thumbnail",
-		"timezone",
-		"price_range",
-		"data_id",
+		"timeZone",
+		"priceRange",
+		"dataID",
 		"images",
 		"reservations",
-		"order_online",
+		"orderOnline",
 		"services",
 		"owner",
-		"complete_address",
+		"completeAddress",
 		"about",
-		"user_reviews",
+		"userReviews",
 		"emails",
 	}
 }
